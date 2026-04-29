@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
+import type { NowPlayingResponse } from "@repo/shared";
 import { getNowPlaying, getSession, spotifyLoginUrl } from "./api";
-import type { NowPlayingResponse } from "./types";
+
+const REMEMBER_KEY = "spotify_chords_remember_me";
 
 function App() {
   const [connected, setConnected] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<NowPlayingResponse | null>(null);
+  const [rememberMe, setRememberMe] = useState<boolean>(() => {
+    return window.localStorage.getItem(REMEMBER_KEY) === "1";
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(REMEMBER_KEY, rememberMe ? "1" : "0");
+  }, [rememberMe]);
 
   useEffect(() => {
     let mounted = true;
@@ -51,7 +60,11 @@ function App() {
   }, [connected]);
 
   if (loading) {
-    return <main className="page"><p>Loading…</p></main>;
+    return (
+      <main className="page">
+        <p>Loading...</p>
+      </main>
+    );
   }
 
   if (!connected) {
@@ -60,7 +73,15 @@ function App() {
         <section className="card">
           <h1>Spotify Chord Links</h1>
           <p>Connect Spotify and this app will search for chord pages for your current track.</p>
-          <a className="btn" href={spotifyLoginUrl()}>
+          <label className="remember">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            Remember me on this browser
+          </label>
+          <a className="btn" href={spotifyLoginUrl(rememberMe)}>
             Connect Spotify
           </a>
           {error ? <p className="error">{error}</p> : null}

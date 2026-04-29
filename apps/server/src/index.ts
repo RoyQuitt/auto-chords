@@ -44,6 +44,13 @@ app.use(
 const chordCache = new Map<string, ChordSearchResult>();
 
 app.get("/auth/spotify/login", (req, res) => {
+  const remember = String(req.query.remember ?? "") === "1";
+  if (remember) {
+    req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30;
+  } else {
+    req.session.cookie.expires = undefined;
+    req.session.cookie.maxAge = undefined;
+  }
   const state = createState();
   req.session.spotifyState = state;
   const authUrl = createSpotifyAuthUrl(state);

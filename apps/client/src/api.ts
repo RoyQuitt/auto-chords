@@ -33,6 +33,7 @@ export async function getNowPlaying(): Promise<NowPlayingResponse> {
   return res.json();
 }
 
-export function spotifyLoginUrl(): string {
-  return `${API_BASE}/auth/spotify/login`;
+export function spotifyLoginUrl(remember: boolean): string {
+  const params = new URLSearchParams({ remember: remember ? "1" : "0" });
+  return `${API_BASE}/auth/spotify/login?${params.toString()}`;
 }
