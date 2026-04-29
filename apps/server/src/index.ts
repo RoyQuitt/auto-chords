@@ -86,12 +86,18 @@ app.get("/api/now-playing", async (req, res) => {
     req.session.tokens = await ensureValidToken(req.session.tokens);
     const track = await getCurrentlyPlaying(req.session.tokens.accessToken);
     if (!track) {
+      // eslint-disable-next-line no-console
+      console.log("[now-playing] No active track");
       return res.json({
         connected: true,
         nowPlaying: null,
         chordSearch: null
       });
     }
+    // eslint-disable-next-line no-console
+    console.log(
+      `[now-playing] ${track.artists.join(", ")} - ${track.title} (${track.spotifyTrackId})`
+    );
 
     const key = `${track.artists.join(",")}::${track.title}`.toLowerCase();
     let chordSearch = chordCache.get(key);
