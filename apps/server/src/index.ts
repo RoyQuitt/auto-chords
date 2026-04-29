@@ -2,8 +2,9 @@ import type { ChordSearchResult } from "@repo/shared";
 import cors from "cors";
 import express from "express";
 import session from "express-session";
+import { createHash } from "node:crypto";
 import { env } from "./env.js";
-import { searchChordLinks } from "./lib/chordsSearch.js";
+import { getSearchProvider, runSearchDiagnostics, searchChordLinks } from "./lib/chordsSearch.js";
 import {
   createSpotifyAuthUrl,
   createState,
@@ -42,6 +43,10 @@ app.use(
 );
 
 const chordCache = new Map<string, ChordSearchResult>();
+
+function fingerprint(value: string): string {
+  return createHash("sha256").update(value).digest("hex").slice(0, 12);
+}
 
 app.get("/auth/spotify/login", (req, res) => {
   const remember = String(req.query.remember ?? "") === "1";
@@ -82,6 +87,34 @@ app.post("/auth/logout", (req, res) => {
 
 app.get("/api/session", (req, res) => {
   res.json({ connected: Boolean(req.session.tokens) });
+});
+
+app.get("/api/diagnostics/search", async (_req, res) => {
+  try {
+    const { provider, response, parsed } = await runSearchDiagnostics();
+
+    if (!response.ok) {
+      return res.status(502).json({
+        ok: false,
+        provider,
+        status: response.status,
+        details: parsed
+      });
+    }
+
+    return res.json({
+      ok: true,
+      provider,
+      status: response.status,
+      details: parsed
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      provider: getSearchProvider(),
+      error: (error as Error).message
+    });
+  }
 });
 
 app.get("/api/now-playing", async (req, res) => {
@@ -126,4 +159,20 @@ app.get("/api/now-playing", async (req, res) => {
 app.listen(env.PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://localhost:${env.PORT}`);
+  // eslint-disable-next-line no-console
+  if (env.GOOGLE_CSE_API_KEY) {
+    console.log(
+      `[config] GOOGLE_CSE_API_KEY sha256=${fingerprint(env.GOOGLE_CSE_API_KEY)} len=${env.GOOGLE_CSE_API_KEY.length}`
+    );
+  } else {
+    console.log("[config] GOOGLE_CSE_API_KEY is not set");
+  }
+  // eslint-disable-next-line no-console
+  console.log(`[config] GOOGLE_CSE_CX=${env.GOOGLE_CSE_CX ?? "not set"}`);
+  // eslint-disable-next-line no-console
+  console.log(`[config] search_provider=${getSearchProvider()}`);
+  // eslint-disable-next-line no-console
+  console.log(
+    `[config] GOOGLE_CSE_API_KEY source=${process.env.GOOGLE_CSE_API_KEY ? "process-env" : ".env file"}`
+  );
 });

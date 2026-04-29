@@ -10,8 +10,8 @@ const envSchema = z.object({
   SPOTIFY_CLIENT_SECRET: z.string().min(1),
   SPOTIFY_REDIRECT_URI: z.string().url(),
   SESSION_SECRET: z.string().min(8),
-  GOOGLE_CSE_API_KEY: z.string().min(1),
-  GOOGLE_CSE_CX: z.string().min(1)
+  GOOGLE_CSE_API_KEY: z.string().optional(),
+  GOOGLE_CSE_CX: z.string().optional()
 });
 
 export const env = envSchema.parse(process.env);
