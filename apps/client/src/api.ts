@@ -1,6 +1,6 @@
 import type { NowPlayingResponse } from "@repo/shared";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8787";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8787";
 
 export async function getSession(): Promise<{ connected: boolean }> {
   const res = await fetch(`${API_BASE}/api/session`, {
