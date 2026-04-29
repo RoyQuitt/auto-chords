@@ -21,7 +21,7 @@ Single-user app that:
 
 In Spotify Developer Dashboard:
 1. Create an app
-2. Add redirect URI: `http://localhost:8787/auth/spotify/callback`
+2. Add redirect URI: `http://127.0.0.1:8787/auth/spotify/callback`
 3. Copy `Client ID` and `Client Secret`
 
 Required scope:
@@ -29,9 +29,9 @@ Required scope:
 
 ## 2) Search API
 
-This starter uses Google Programmable Search JSON API.
+Primary provider is Google CSE. If Google keys are missing, server falls back to DuckDuckGo (no-key mode).
 
-Set:
+Optional Google vars:
 - `GOOGLE_CSE_API_KEY`
 - `GOOGLE_CSE_CX`
 
@@ -41,10 +41,10 @@ Create `apps/server/.env`:
 
 ```env
 PORT=8787
-APP_BASE_URL=http://localhost:5173
+APP_BASE_URL=http://127.0.0.1:5173
 SPOTIFY_CLIENT_ID=your_spotify_client_id
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=http://localhost:8787/auth/spotify/callback
+SPOTIFY_REDIRECT_URI=http://127.0.0.1:8787/auth/spotify/callback
 SESSION_SECRET=replace_with_random_string
 
 GOOGLE_CSE_API_KEY=your_google_api_key
@@ -54,7 +54,7 @@ GOOGLE_CSE_CX=your_programmable_search_engine_id
 Create `apps/client/.env`:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8787
+VITE_API_BASE_URL=http://127.0.0.1:8787
 ```
 
 ## 4) Install + Run
@@ -66,10 +66,12 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`.
+Open `http://127.0.0.1:5173`.
 
 ## Notes
 
 - This is intentionally single-user and uses in-memory session/token storage.
 - If Spotify returns no active track, UI shows a waiting state.
 - Chord results are links only (Option A), with simple ranking and filtering.
+- Diagnostics endpoint: `GET /api/diagnostics/search`
+- If Google returns an error during chord search, backend retries that request with DuckDuckGo.
