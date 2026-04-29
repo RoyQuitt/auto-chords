@@ -49,15 +49,32 @@ function dedupeLinks(links: ChordLink[]): ChordLink[] {
 
 export async function searchChordLinks(track: TrackInfo): Promise<ChordSearchResult> {
   const query = buildQuery(track);
+  console.log(`[chord-search] query="${query}"`);
   const params = new URLSearchParams({
     key: env.GOOGLE_CSE_API_KEY,
     cx: env.GOOGLE_CSE_CX,
     q: query,
-    num: "10"
+    num: "10",
   });
 
-  const response = await fetch(`https://www.googleapis.com/customsearch/v1?${params.toString()}`);
+  const response = await fetch(
+    `https://www.googleapis.com/customsearch/v1?${params.toString()}`,
+  );
+  console.log(`[chord-search] status=${response.status}`);
+
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`[chord-search] Google CSE ${response.status}: ${errorText}`);
+    try {
+      const parsed = JSON.parse(errorText) as {
+        error?: { message?: string; status?: string; errors?: { reason?: string }[] };
+      };
+      const reason = parsed.error?.errors?.[0]?.reason ?? "unknown_reason";
+      const message = parsed.error?.message ?? "unknown_message";
+      console.error(`[chord-search] reason=${reason} message="${message}"`);
+    } catch {
+      // Non-JSON error body, already logged above.
+    }
     throw new Error(`Chord search failed (${response.status})`);
   }
 
@@ -68,7 +85,7 @@ export async function searchChordLinks(track: TrackInfo): Promise<ChordSearchRes
   const links = (json.items ?? []).map((item) => ({
     title: item.title,
     url: item.link,
-    displayLink: item.displayLink
+    displayLink: item.displayLink,
   }));
 
   const ranked = dedupeLinks(links)
