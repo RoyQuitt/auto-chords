@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
+import type { TrackInfo } from "@repo/shared";
 import { env } from "../env.js";
-import type { TokenSet, TrackInfo } from "../types.js";
+import type { TokenSet } from "../types.js";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 const SPOTIFY_ACCOUNTS_BASE = "https://accounts.spotify.com";

@@ -1,5 +1,5 @@
+import type { ChordLink, ChordSearchResult, TrackInfo } from "@repo/shared";
 import { env } from "../env.js";
-import type { ChordLink, ChordSearchResult, TrackInfo } from "../types.js";
 
 const preferredDomains = [
   "ultimate-guitar.com",

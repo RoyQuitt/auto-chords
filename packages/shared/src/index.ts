@@ -1,9 +1,3 @@
-export type TokenSet = {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-};
-
 export type TrackInfo = {
   spotifyTrackId: string;
   title: string;
@@ -24,4 +18,10 @@ export type ChordLink = {
 export type ChordSearchResult = {
   query: string;
   links: ChordLink[];
+};
+
+export type NowPlayingResponse = {
+  connected: boolean;
+  nowPlaying: TrackInfo | null;
+  chordSearch: ChordSearchResult | null;
 };

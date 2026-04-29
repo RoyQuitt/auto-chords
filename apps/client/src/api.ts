@@ -1,4 +1,4 @@
-import type { NowPlayingResponse } from "./types";
+import type { NowPlayingResponse } from "@repo/shared";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8787";
 

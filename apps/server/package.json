@@ -1,5 +1,5 @@
 {
-  "name": "spotify-chords-server",
+  "name": "@app/server",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,6 +9,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@repo/shared": "*",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

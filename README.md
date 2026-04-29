@@ -13,8 +13,9 @@ Single-user app that:
 
 ## Project Structure
 
-- `client/` React app
-- `server/` Express API
+- `apps/client/` React app
+- `apps/server/` Express API
+- `packages/shared/` shared TypeScript types
 
 ## 1) Create Spotify App
 
@@ -36,7 +37,7 @@ Set:
 
 ## 3) Environment
 
-Create `server/.env`:
+Create `apps/server/.env`:
 
 ```env
 PORT=8787
@@ -50,7 +51,7 @@ GOOGLE_CSE_API_KEY=your_google_api_key
 GOOGLE_CSE_CX=your_programmable_search_engine_id
 ```
 
-Create `client/.env`:
+Create `apps/client/.env`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8787
@@ -61,15 +62,6 @@ VITE_API_BASE_URL=http://localhost:8787
 From repo root:
 
 ```bash
-cd server
-npm install
-npm run dev
-```
-
-In a second terminal:
-
-```bash
-cd client
 npm install
 npm run dev
 ```

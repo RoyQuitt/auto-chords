@@ -1,3 +1,4 @@
+import type { ChordSearchResult } from "@repo/shared";
 import cors from "cors";
 import express from "express";
 import session from "express-session";
@@ -10,7 +11,7 @@ import {
   exchangeCodeForTokens,
   getCurrentlyPlaying
 } from "./lib/spotify.js";
-import type { ChordSearchResult, TokenSet } from "./types.js";
+import type { TokenSet } from "./types.js";
 
 declare module "express-session" {
   interface SessionData {
