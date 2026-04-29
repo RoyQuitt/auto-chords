@@ -35,6 +35,7 @@ function App() {
         const next = await getNowPlaying();
         if (!mounted) return;
         setData(next);
+        setError(null);
       } catch (e) {
         if (!mounted) return;
         setError((e as Error).message);
