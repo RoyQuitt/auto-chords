@@ -1,133 +1,21 @@
-:root {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #111827;
-  background: #f4f6fb;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
+html,
+body,
+#root {
   margin: 0;
-}
-
-.page {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-}
-
-.card {
-  width: min(900px, 100%);
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
-}
-
-.viewer-page {
-  min-height: 100vh;
-  padding: 0;
-}
-
-.viewer-shell {
-  width: 100%;
-  min-height: 100vh;
-  background: #ffffff;
-  padding: 18px 20px;
-}
-
-.btn {
-  display: inline-block;
-  margin-top: 8px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  text-decoration: none;
-  background: #16a34a;
-  color: #fff;
-  font-weight: 600;
-}
-
-.remember {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.track {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.track img {
-  width: 120px;
-  height: 120px;
-  border-radius: 12px;
-  object-fit: cover;
-}
-
-.links ul {
-  padding-left: 18px;
+  min-height: 100%;
 }
 
 .iframe-wrap {
-  margin: 12px 0 14px;
-  border: 1px solid #e5e7eb;
+  margin-top: 6px;
+  border: 1px solid #e9ecef;
   border-radius: 10px;
   overflow: hidden;
+  background: #fff;
 }
 
 .chord-iframe {
   width: 100%;
-  height: calc(100vh - 260px);
-  min-height: 480px;
+  height: calc(100vh - 320px);
+  min-height: 460px;
   border: 0;
-  background: #fff;
-}
-
-.embed-fallback {
-  margin: 12px 0 16px;
-  padding: 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #f9fafb;
-}
-
-.top-open-btn {
-  margin: 6px 0 10px;
-}
-
-.alt-links {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.alt-links a {
-  text-decoration: none;
-  font-size: 13px;
-  color: #1d4ed8;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  border-radius: 999px;
-  padding: 6px 10px;
-}
-
-.links li {
-  margin-bottom: 10px;
-}
-
-.links span {
-  display: block;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.error {
-  color: #b91c1c;
 }
