@@ -160,19 +160,15 @@ app.listen(env.PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://localhost:${env.PORT}`);
   // eslint-disable-next-line no-console
-  if (env.GOOGLE_CSE_API_KEY) {
-    console.log(
-      `[config] GOOGLE_CSE_API_KEY sha256=${fingerprint(env.GOOGLE_CSE_API_KEY)} len=${env.GOOGLE_CSE_API_KEY.length}`
-    );
-  } else {
-    console.log("[config] GOOGLE_CSE_API_KEY is not set");
-  }
+  console.log(
+    `[config] BRAVE_SEARCH_API_KEY sha256=${fingerprint(env.BRAVE_SEARCH_API_KEY)} len=${env.BRAVE_SEARCH_API_KEY.length}`
+  );
   // eslint-disable-next-line no-console
-  console.log(`[config] GOOGLE_CSE_CX=${env.GOOGLE_CSE_CX ?? "not set"}`);
+  console.log(`[config] BRAVE_SEARCH_ENDPOINT=${env.BRAVE_SEARCH_ENDPOINT}`);
   // eslint-disable-next-line no-console
   console.log(`[config] search_provider=${getSearchProvider()}`);
   // eslint-disable-next-line no-console
   console.log(
-    `[config] GOOGLE_CSE_API_KEY source=${process.env.GOOGLE_CSE_API_KEY ? "process-env" : ".env file"}`
+    `[config] BRAVE_SEARCH_API_KEY source=${process.env.BRAVE_SEARCH_API_KEY ? "process-env" : ".env file"}`
   );
 });

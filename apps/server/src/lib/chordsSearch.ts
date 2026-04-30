@@ -2,14 +2,8 @@ import type { ChordLink, ChordSearchResult, TrackInfo } from "@repo/shared";
 import { createHash } from "node:crypto";
 import { env } from "../env.js";
 
-const preferredDomains = [
-  "ultimate-guitar.com",
-  "e-chords.com",
-  "azchords.com",
-  "chordify.net"
-];
-
-type SearchProvider = "google-cse" | "duckduckgo";
+const preferredDomains = ["ultimate-guitar.com", "e-chords.com", "azchords.com", "chordify.net"];
+type SearchProvider = "brave" | "duckduckgo";
 
 function normalizeTitle(title: string): string {
   return title
@@ -56,26 +50,25 @@ function fingerprint(value: string): string {
 }
 
 export function getSearchProvider(): SearchProvider {
-  if (env.GOOGLE_CSE_API_KEY && env.GOOGLE_CSE_CX) {
-    return "google-cse";
-  }
-  return "duckduckgo";
+  return "brave";
 }
 
-async function queryGoogleCse(query: string, caller: "now-playing" | "diagnostics") {
-  const keyFp = fingerprint(env.GOOGLE_CSE_API_KEY ?? "");
+async function queryBraveSearch(query: string, caller: "now-playing" | "diagnostics") {
+  const keyFp = fingerprint(env.BRAVE_SEARCH_API_KEY);
   const timestamp = new Date().toISOString();
   console.log(
-    `[chord-search] ts=${timestamp} pid=${process.pid} provider=google-cse caller=${caller} keyFp=${keyFp} query="${query}"`
+    `[chord-search] ts=${timestamp} pid=${process.pid} provider=brave caller=${caller} keyFp=${keyFp} query="${query}"`
   );
 
-  const params = new URLSearchParams({
-    key: env.GOOGLE_CSE_API_KEY ?? "",
-    cx: env.GOOGLE_CSE_CX ?? "",
-    q: query,
-    num: "10"
+  const endpoint = new URL(env.BRAVE_SEARCH_ENDPOINT);
+  endpoint.searchParams.set("q", query);
+  endpoint.searchParams.set("count", "10");
+
+  const response = await fetch(endpoint, {
+    headers: {
+      "X-Subscription-Token": env.BRAVE_SEARCH_API_KEY
+    }
   });
-  const response = await fetch(`https://www.googleapis.com/customsearch/v1?${params.toString()}`);
   const bodyText = await response.text();
 
   let parsed: unknown = null;
@@ -86,7 +79,7 @@ async function queryGoogleCse(query: string, caller: "now-playing" | "diagnostic
   }
 
   if (!response.ok) {
-    console.error(`[chord-search] Google CSE ${response.status}: ${bodyText}`);
+    console.error(`[chord-search] Brave ${response.status}: ${bodyText}`);
   }
   return { response, parsed };
 }
@@ -97,6 +90,7 @@ async function queryDuckDuckGo(query: string, caller: "now-playing" | "diagnosti
   console.log(
     `[chord-search] ts=${timestamp} pid=${process.pid} provider=duckduckgo caller=${caller} query="${constrainedQuery}"`
   );
+
   const url = `https://duckduckgo.com/html/?${new URLSearchParams({ q: constrainedQuery }).toString()}`;
   const response = await fetch(url, {
     headers: {
@@ -132,7 +126,7 @@ function parseDuckDuckGoLinks(html: string): ChordLink[] {
         return decodeURIComponent(uddg);
       }
     } catch {
-      // Fall through and return original URL.
+      // Fall through.
     }
     return url;
   };
@@ -150,42 +144,48 @@ function parseDuckDuckGoLinks(html: string): ChordLink[] {
   return links;
 }
 
+function parseBraveLinks(parsed: unknown): ChordLink[] {
+  const json = parsed as {
+    web?: {
+      results?: { title?: string; url?: string; meta_url?: { hostname?: string } }[];
+    };
+  };
+
+  return (json.web?.results ?? [])
+    .map((item) => ({
+      title: item.title ?? item.url ?? "",
+      url: item.url ?? "",
+      displayLink: item.meta_url?.hostname
+    }))
+    .filter((item) => item.url.startsWith("http"));
+}
+
 export async function runSearchDiagnostics() {
-  const provider = getSearchProvider();
-  if (provider === "google-cse") {
-    const { response, parsed } = await queryGoogleCse("test chords", "diagnostics");
-    return { provider, response, parsed };
-  }
-  const { response, parsed } = await queryDuckDuckGo("test chords", "diagnostics");
-  const links = parseDuckDuckGoLinks(parsed as string).slice(0, 3);
-  return { provider, response, parsed: { linksPreview: links } };
+  const { response, parsed } = await queryBraveSearch("test chords", "diagnostics");
+  return {
+    provider: "brave" as const,
+    response,
+    parsed
+  };
 }
 
 export async function searchChordLinks(track: TrackInfo): Promise<ChordSearchResult> {
   const query = buildQuery(track);
   let links: ChordLink[] = [];
-  if (getSearchProvider() === "google-cse") {
-    const { response, parsed } = await queryGoogleCse(query, "now-playing");
-    if (response.ok) {
-      const json = parsed as {
-        items?: { title: string; link: string; displayLink?: string }[];
-      };
-      links = (json.items ?? []).map((item) => ({
-        title: item.title,
-        url: item.link,
-        displayLink: item.displayLink
-      }));
-    } else {
-      console.warn("[chord-search] Google failed, retrying with DuckDuckGo fallback");
-    }
+
+  const brave = await queryBraveSearch(query, "now-playing");
+  if (brave.response.ok) {
+    links = parseBraveLinks(brave.parsed);
+  } else {
+    console.warn("[chord-search] Brave failed, retrying with DuckDuckGo fallback");
   }
 
   if (links.length === 0) {
-    const { response, parsed } = await queryDuckDuckGo(query, "now-playing");
-    if (!response.ok) {
-      throw new Error(`Chord search failed (${response.status})`);
+    const ddg = await queryDuckDuckGo(query, "now-playing");
+    if (!ddg.response.ok) {
+      throw new Error(`Chord search failed (${ddg.response.status})`);
     }
-    links = parseDuckDuckGoLinks(parsed as string);
+    links = parseDuckDuckGoLinks(ddg.parsed as string);
   }
 
   const ranked = dedupeLinks(links)
