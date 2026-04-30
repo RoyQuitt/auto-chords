@@ -9,6 +9,7 @@ function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<NowPlayingResponse | null>(null);
+  const [iframeFailed, setIframeFailed] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(() => {
     return window.localStorage.getItem(REMEMBER_KEY) === "1";
   });
@@ -59,6 +60,12 @@ function App() {
     };
   }, [connected]);
 
+  const firstChordLink = data?.chordSearch?.links?.[0]?.url ?? null;
+
+  useEffect(() => {
+    setIframeFailed(false);
+  }, [firstChordLink]);
+
   if (loading) {
     return (
       <main className="page">
@@ -91,8 +98,8 @@ function App() {
   }
 
   return (
-    <main className="page">
-      <section className="card">
+    <main className="viewer-page">
+      <section className="viewer-shell">
         <h1>Now Playing</h1>
         {!data?.nowPlaying ? (
           <p>Nothing playing right now. Start a song in Spotify.</p>
@@ -115,16 +122,51 @@ function App() {
             <div className="links">
               <h3>Top Chord Links</h3>
               {data.chordSearch?.links.length ? (
-                <ul>
-                  {data.chordSearch.links.map((link) => (
-                    <li key={link.url}>
-                      <a href={link.url} target="_blank" rel="noreferrer">
-                        {link.title}
-                      </a>
-                      {link.displayLink ? <span>{link.displayLink}</span> : null}
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  {firstChordLink ? (
+                    <a
+                      className="btn top-open-btn"
+                      href={firstChordLink}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open Top Result in New Tab
+                    </a>
+                  ) : null}
+                  {firstChordLink && !iframeFailed ? (
+                    <div className="iframe-wrap">
+                      <iframe
+                        title="Chord Viewer"
+                        src={firstChordLink}
+                        className="chord-iframe"
+                        onError={() => setIframeFailed(true)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="embed-fallback">
+                      <p>This site blocks embedding in iframe.</p>
+                      {data.chordSearch.links.length > 1 ? (
+                        <div className="alt-links">
+                          {data.chordSearch.links.slice(1, 4).map((link) => (
+                            <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
+                              Try: {link.title}
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                  <ul>
+                    {data.chordSearch.links.map((link) => (
+                      <li key={link.url}>
+                        <a href={link.url} target="_blank" rel="noreferrer">
+                          {link.title}
+                        </a>
+                        {link.displayLink ? <span>{link.displayLink}</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </>
               ) : (
                 <p>No chord links found for this song yet.</p>
               )}

@@ -27,6 +27,18 @@ body {
   box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
 }
 
+.viewer-page {
+  min-height: 100vh;
+  padding: 0;
+}
+
+.viewer-shell {
+  width: 100%;
+  min-height: 100vh;
+  background: #ffffff;
+  padding: 18px 20px;
+}
+
 .btn {
   display: inline-block;
   margin-top: 8px;
@@ -60,6 +72,50 @@ body {
 
 .links ul {
   padding-left: 18px;
+}
+
+.iframe-wrap {
+  margin: 12px 0 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.chord-iframe {
+  width: 100%;
+  height: calc(100vh - 260px);
+  min-height: 480px;
+  border: 0;
+  background: #fff;
+}
+
+.embed-fallback {
+  margin: 12px 0 16px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.top-open-btn {
+  margin: 6px 0 10px;
+}
+
+.alt-links {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.alt-links a {
+  text-decoration: none;
+  font-size: 13px;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  padding: 6px 10px;
 }
 
 .links li {
