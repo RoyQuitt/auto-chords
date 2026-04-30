@@ -2,7 +2,13 @@ import type { ChordLink, ChordSearchResult, TrackInfo } from "@repo/shared";
 import { createHash } from "node:crypto";
 import { env } from "../env.js";
 
-const preferredDomains = ["ultimate-guitar.com", "e-chords.com", "azchords.com", "chordify.net"];
+const preferredDomains = [
+  'tab4u.com',
+  'ultimate-guitar.com',
+  'e-chords.com',
+  'azchords.com',
+  'chordify.net',
+];
 type SearchProvider = "brave" | "duckduckgo";
 
 function normalizeTitle(title: string): string {
