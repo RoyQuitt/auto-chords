@@ -1,6 +1,11 @@
-import type { ChordLink, ChordSearchResult, TrackInfo } from "@repo/shared";
-import { createHash } from "node:crypto";
-import { env } from "../env.js";
+import {
+  buildQuery,
+  type ChordLink,
+  type ChordSearchResult,
+  type TrackInfo,
+} from '@repo/shared';
+import { createHash } from 'node:crypto';
+import { env } from '../env.js';
 
 const preferredDomains = [
   'tab4u.com',
@@ -9,36 +14,20 @@ const preferredDomains = [
   'azchords.com',
   'chordify.net',
 ];
-type SearchProvider = "brave" | "duckduckgo";
-
-function normalizeTitle(title: string): string {
-  return title
-    .replace(/\(.*?remaster.*?\)/gi, "")
-    .replace(/\(.*?live.*?\)/gi, "")
-    .replace(/\(feat\..*?\)/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function buildQuery(track: TrackInfo): string {
-  const artist = track.artists[0] ?? "";
-  const title = normalizeTitle(track.title);
-  const isHebrew = /[\u0590-\u05FF]/.test(title);
-  return isHebrew ? `${artist} ${title} אקורדים` : `${artist} ${title} chords`;
-}
+type SearchProvider = 'brave' | 'duckduckgo';
 
 function scoreLink(link: ChordLink): number {
   const url = link.url.toLowerCase();
   const title = link.title.toLowerCase();
   let score = 0;
-  if (title.includes("chords")) score += 3;
-  if (title.includes("tabs")) score += 1;
+  if (title.includes('chords')) score += 3;
+  if (title.includes('tabs')) score += 1;
   preferredDomains.forEach((domain, index) => {
     if (url.includes(domain)) {
       score += 10 - index;
     }
   });
-  if (title.includes("lyrics")) score -= 2;
+  if (title.includes('lyrics')) score -= 2;
   return score;
 }
 
@@ -52,28 +41,31 @@ function dedupeLinks(links: ChordLink[]): ChordLink[] {
 }
 
 function fingerprint(value: string): string {
-  return createHash("sha256").update(value).digest("hex").slice(0, 12);
+  return createHash('sha256').update(value).digest('hex').slice(0, 12);
 }
 
 export function getSearchProvider(): SearchProvider {
-  return "brave";
+  return 'brave';
 }
 
-async function queryBraveSearch(query: string, caller: "now-playing" | "diagnostics") {
+async function queryBraveSearch(
+  query: string,
+  caller: 'now-playing' | 'diagnostics',
+) {
   const keyFp = fingerprint(env.BRAVE_SEARCH_API_KEY);
   const timestamp = new Date().toISOString();
   console.log(
-    `[chord-search] ts=${timestamp} pid=${process.pid} provider=brave caller=${caller} keyFp=${keyFp} query="${query}"`
+    `[chord-search] ts=${timestamp} pid=${process.pid} provider=brave caller=${caller} keyFp=${keyFp} query="${query}"`,
   );
 
   const endpoint = new URL(env.BRAVE_SEARCH_ENDPOINT);
-  endpoint.searchParams.set("q", query);
-  endpoint.searchParams.set("count", "10");
+  endpoint.searchParams.set('q', query);
+  endpoint.searchParams.set('count', '10');
 
   const response = await fetch(endpoint, {
     headers: {
-      "X-Subscription-Token": env.BRAVE_SEARCH_API_KEY
-    }
+      'X-Subscription-Token': env.BRAVE_SEARCH_API_KEY,
+    },
   });
   const bodyText = await response.text();
 
@@ -90,44 +82,52 @@ async function queryBraveSearch(query: string, caller: "now-playing" | "diagnost
   return { response, parsed };
 }
 
-async function queryDuckDuckGo(query: string, caller: "now-playing" | "diagnostics") {
+async function queryDuckDuckGo(
+  query: string,
+  caller: 'now-playing' | 'diagnostics',
+) {
   const constrainedQuery = `${query} (site:ultimate-guitar.com OR site:tab4u.com)`;
   const timestamp = new Date().toISOString();
   console.log(
-    `[chord-search] ts=${timestamp} pid=${process.pid} provider=duckduckgo caller=${caller} query="${constrainedQuery}"`
+    `[chord-search] ts=${timestamp} pid=${process.pid} provider=duckduckgo caller=${caller} query="${constrainedQuery}"`,
   );
 
   const url = `https://duckduckgo.com/html/?${new URLSearchParams({ q: constrainedQuery }).toString()}`;
   const response = await fetch(url, {
     headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    }
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    },
   });
   const html = await response.text();
   if (!response.ok) {
-    console.error(`[chord-search] DuckDuckGo ${response.status}: ${html.slice(0, 500)}`);
+    console.error(
+      `[chord-search] DuckDuckGo ${response.status}: ${html.slice(0, 500)}`,
+    );
   }
   return { response, parsed: html };
 }
 
 function parseDuckDuckGoLinks(html: string): ChordLink[] {
   const links: ChordLink[] = [];
-  const re = /<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const re =
+    /<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let match: RegExpExecArray | null = null;
 
   const decodeHtml = (value: string) =>
     value
-      .replace(/&amp;/g, "&")
-      .replace(/&quot;/g, "\"")
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">");
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
 
   const unwrapDuckDuckGoRedirect = (url: string): string => {
     try {
-      const parsed = url.startsWith("http") ? new URL(url) : new URL(url, "https://duckduckgo.com");
-      const uddg = parsed.searchParams.get("uddg");
+      const parsed = url.startsWith('http')
+        ? new URL(url)
+        : new URL(url, 'https://duckduckgo.com');
+      const uddg = parsed.searchParams.get('uddg');
       if (uddg) {
         return decodeURIComponent(uddg);
       }
@@ -138,12 +138,12 @@ function parseDuckDuckGoLinks(html: string): ChordLink[] {
   };
 
   while ((match = re.exec(html)) !== null) {
-    const rawUrl = decodeHtml(match[1] ?? "");
-    const titleHtml = match[2] ?? "";
-    const title = titleHtml.replace(/<[^>]+>/g, "").trim();
-    const resolvedUrl = rawUrl.startsWith("//") ? `https:${rawUrl}` : rawUrl;
+    const rawUrl = decodeHtml(match[1] ?? '');
+    const titleHtml = match[2] ?? '';
+    const title = titleHtml.replace(/<[^>]+>/g, '').trim();
+    const resolvedUrl = rawUrl.startsWith('//') ? `https:${rawUrl}` : rawUrl;
     const finalUrl = unwrapDuckDuckGoRedirect(resolvedUrl);
-    if (finalUrl.startsWith("http")) {
+    if (finalUrl.startsWith('http')) {
       links.push({ title: title || finalUrl, url: finalUrl });
     }
   }
@@ -153,41 +153,52 @@ function parseDuckDuckGoLinks(html: string): ChordLink[] {
 function parseBraveLinks(parsed: unknown): ChordLink[] {
   const json = parsed as {
     web?: {
-      results?: { title?: string; url?: string; meta_url?: { hostname?: string } }[];
+      results?: {
+        title?: string;
+        url?: string;
+        meta_url?: { hostname?: string };
+      }[];
     };
   };
 
   return (json.web?.results ?? [])
     .map((item) => ({
-      title: item.title ?? item.url ?? "",
-      url: item.url ?? "",
-      displayLink: item.meta_url?.hostname
+      title: item.title ?? item.url ?? '',
+      url: item.url ?? '',
+      displayLink: item.meta_url?.hostname,
     }))
-    .filter((item) => item.url.startsWith("http"));
+    .filter((item) => item.url.startsWith('http'));
 }
 
 export async function runSearchDiagnostics() {
-  const { response, parsed } = await queryBraveSearch("test chords", "diagnostics");
+  const { response, parsed } = await queryBraveSearch(
+    'test chords',
+    'diagnostics',
+  );
   return {
-    provider: "brave" as const,
+    provider: 'brave' as const,
     response,
-    parsed
+    parsed,
   };
 }
 
-export async function searchChordLinks(track: TrackInfo): Promise<ChordSearchResult> {
+export async function searchChordLinks(
+  track: TrackInfo,
+): Promise<ChordSearchResult> {
   const query = buildQuery(track);
   let links: ChordLink[] = [];
 
-  const brave = await queryBraveSearch(query, "now-playing");
+  const brave = await queryBraveSearch(query, 'now-playing');
   if (brave.response.ok) {
     links = parseBraveLinks(brave.parsed);
   } else {
-    console.warn("[chord-search] Brave failed, retrying with DuckDuckGo fallback");
+    console.warn(
+      '[chord-search] Brave failed, retrying with DuckDuckGo fallback',
+    );
   }
 
   if (links.length === 0) {
-    const ddg = await queryDuckDuckGo(query, "now-playing");
+    const ddg = await queryDuckDuckGo(query, 'now-playing');
     if (!ddg.response.ok) {
       throw new Error(`Chord search failed (${ddg.response.status})`);
     }
