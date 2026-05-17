@@ -3,6 +3,9 @@ import cors from "cors";
 import express from "express";
 import session from "express-session";
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { env } from "./env.js";
 import { getSearchProvider, runSearchDiagnostics, searchChordLinks } from "./lib/chordsSearch.js";
 import {
@@ -22,14 +25,23 @@ declare module "express-session" {
 }
 
 const app = express();
+const isProduction = process.env.NODE_ENV === "production";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = path.resolve(__dirname, "../../client/dist");
 
-app.use(
-  cors({
-    origin: env.APP_BASE_URL,
-    credentials: true
-  })
-);
+if (!isProduction) {
+  app.use(
+    cors({
+      origin: env.APP_BASE_URL,
+      credentials: true
+    })
+  );
+}
 app.use(express.json());
+if (isProduction) {
+  app.set("trust proxy", 1);
+}
 app.use(
   session({
     secret: env.SESSION_SECRET,
@@ -37,7 +49,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: "lax"
+      sameSite: "lax",
+      secure: isProduction
     }
   })
 );
@@ -156,9 +169,23 @@ app.get("/api/now-playing", async (req, res) => {
   }
 });
 
-app.listen(env.PORT, () => {
+if (isProduction && existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/auth")) {
+      return next();
+    }
+    return res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+}
+
+app.listen(env.PORT, "0.0.0.0", () => {
   // eslint-disable-next-line no-console
-  console.log(`Server listening on http://localhost:${env.PORT}`);
+  console.log(`Server listening on 0.0.0.0:${env.PORT}`);
+  if (isProduction) {
+    // eslint-disable-next-line no-console
+    console.log(`[config] static_client_dist=${clientDistPath} exists=${existsSync(clientDistPath)}`);
+  }
   // eslint-disable-next-line no-console
   console.log(
     `[config] BRAVE_SEARCH_API_KEY sha256=${fingerprint(env.BRAVE_SEARCH_API_KEY)} len=${env.BRAVE_SEARCH_API_KEY.length}`
