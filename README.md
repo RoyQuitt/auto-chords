@@ -68,6 +68,31 @@ npm run dev
 
 Open `http://127.0.0.1:5173`.
 
+## 5) Deploy to Railway (Single Service)
+
+Deploy from repo root as one Railway service:
+
+- Build command: `npm run railway:build`
+- Start command: `npm run railway:start`
+
+Required Railway variables:
+
+```env
+NODE_ENV=production
+PORT=8787
+APP_BASE_URL=https://<your-railway-domain>
+SPOTIFY_CLIENT_ID=...
+SPOTIFY_CLIENT_SECRET=...
+SPOTIFY_REDIRECT_URI=https://<your-railway-domain>/auth/spotify/callback
+SESSION_SECRET=...
+BRAVE_SEARCH_API_KEY=...
+BRAVE_SEARCH_ENDPOINT=https://api.search.brave.com/res/v1/web/search
+```
+
+Spotify Dashboard redirect URI must include:
+
+`https://<your-railway-domain>/auth/spotify/callback`
+
 ## Notes
 
 - This is intentionally single-user and uses in-memory session/token storage.

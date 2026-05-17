@@ -10,7 +10,10 @@
     "dev": "concurrently \"npm run dev -w @app/server\" \"npm run dev -w @app/client\"",
     "dev:server": "npm run dev -w @app/server",
     "dev:client": "npm run dev -w @app/client",
-    "build": "npm run build -w @repo/shared && npm run build -w @app/server && npm run build -w @app/client"
+    "build": "npm run build -w @repo/shared && npm run build -w @app/server && npm run build -w @app/client",
+    "start": "npm run start -w @app/server",
+    "railway:build": "npm run build",
+    "railway:start": "npm run start"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
