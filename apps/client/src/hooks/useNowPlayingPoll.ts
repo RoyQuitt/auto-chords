@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import type { NowPlayingResponse } from "@repo/shared";
 import { getNowPlaying } from "../api";
+import { useSearchChordsInNewTab } from './useSearchChordsInNewTab';
 
 export function useNowPlayingPoll(connected: boolean, onSuccess?: () => void) {
   const [data, setData] = useState<NowPlayingResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useSearchChordsInNewTab(data?.nowPlaying ?? null);
 
   useEffect(() => {
     if (!connected) return;
